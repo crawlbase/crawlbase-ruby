@@ -6,23 +6,26 @@ require 'uri'
 
 module Crawlbase
   class API
-    attr_reader :token, :body, :status_code, :original_status, :pc_status, :url, :storage_url
+    attr_reader :token, :body, :status_code, :original_status, :pc_status, :url, :storage_url, :timeout
 
     INVALID_TOKEN = 'Token is required'
     INVALID_URL = 'URL is required'
+    DEFAULT_TIMEOUT = 90
 
     def initialize(options = {})
       raise INVALID_TOKEN if options[:token].nil?
 
       @token = options[:token]
+      @timeout = options.fetch(:timeout, DEFAULT_TIMEOUT)
     end
 
     def get(url, options = {})
       raise INVALID_URL if url.empty?
 
       uri = prepare_uri(url, options)
-
-      response = Net::HTTP.get_response(uri)
+      http = build_http(uri)
+      request = Net::HTTP::Get.new(uri.request_uri)
+      response = http.request(request)
 
       prepare_response(response, options[:format])
 
@@ -33,10 +36,7 @@ module Crawlbase
       raise INVALID_URL if url.empty?
 
       uri = prepare_uri(url, options)
-
-      http = Net::HTTP.new(uri.host, uri.port)
-
-      http.use_ssl = true
+      http = build_http(uri)
 
       content_type = options[:post_content_type].to_s.include?('json') ? { 'Content-Type': 'text/json' } : nil
 
@@ -56,6 +56,14 @@ module Crawlbase
     end
 
     private
+
+    def build_http(uri)
+      http = Net::HTTP.new(uri.host, uri.port)
+      http.use_ssl = true
+      http.open_timeout = @timeout
+      http.read_timeout = @timeout
+      http
+    end
 
     def base_url
       'https://api.crawlbase.com'
