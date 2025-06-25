@@ -34,6 +34,12 @@ You can get a token for free by [creating a Crawlbase account](https://crawlbase
 api = Crawlbase::API.new(token: 'YOUR_TOKEN')
 ```
 
+By default, the timeout for API requests is set to 90 seconds. You can configure a custom timeout by passing a `timeout` option during initialization.
+
+```ruby
+api = Crawlbase::API.new(token: 'YOUR_TOKEN', timeout: 120)
+```
+
 ### GET requests
 
 Pass the url that you want to scrape plus any options from the ones available in the [API documentation](https://crawlbase.com/dashboard/docs).
@@ -357,7 +363,7 @@ The gem is available as open source under the terms of the [MIT License](http://
 
 ## Code of Conduct
 
-Everyone interacting in the Crawlbase project’s codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/crawlbase-source/crawlbase-ruby/blob/master/CODE_OF_CONDUCT.md).
+Everyone interacting in the Crawlbase project's codebases, issue trackers, chat rooms and mailing lists is expected to follow the [code of conduct](https://github.com/crawlbase-source/crawlbase-ruby/blob/master/CODE_OF_CONDUCT.md).
 
 ---
 
