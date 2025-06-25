@@ -93,5 +93,4 @@ describe Crawlbase::API do
       expect { api.post('http://httpbin.org/delay/3', {}) }.to raise_error(Net::OpenTimeout)
     end
   end
-
 end
