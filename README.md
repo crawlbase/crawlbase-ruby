@@ -367,4 +367,4 @@ Everyone interacting in the Crawlbase project's codebases, issue trackers, chat 
 
 ---
 
-Copyright 2025 Crawlbase
+Copyright 2026 Crawlbase
