@@ -56,7 +56,7 @@ begin
   response = api.get('https://www.facebook.com/britneyspears')
   puts response.status_code
   puts response.original_status
-  puts response.pc_status
+  puts response.cb_status
   puts response.body
 rescue => exception
   puts exception.backtrace
@@ -125,16 +125,31 @@ response = api.get('https://www.freelancer.com', options: { page_wait: 5000 })
 puts response.status_code
 ```
 
-## Original status
+## Original status and Crawlbase status
 
-You can always get the original status and crawlbase status from the response. Read the [Crawlbase documentation](https://crawlbase.com/dashboard/docs) to learn more about those status.
+You can always get the original status and Crawlbase status from the response. Read the [Crawlbase documentation](https://crawlbase.com/dashboard/docs) to learn more about those statuses.
+
+Prefer `cb_status` for the Crawlbase status. `pc_status` is deprecated but still supported temporarily and returns the same resolved value.
 
 ```ruby
 response = api.get('https://sfbay.craigslist.org/')
 
 puts response.original_status
-puts response.pc_status
+puts response.cb_status # preferred
+# puts response.pc_status # deprecated; same value as cb_status
 ```
+
+### Migrating from `pc_status` to `cb_status`
+
+```ruby
+# Before (deprecated)
+response.pc_status
+
+# After (preferred)
+response.cb_status
+```
+
+The library reads `cb_status` from the API response first, then falls back to `pc_status` if `cb_status` is not present.
 
 ## Scraper API usage
 
@@ -254,7 +269,7 @@ Pass the [url](https://crawlbase.com/docs/storage-api/parameters/#url) that you 
 begin
   response = storage_api.get('https://www.apple.com')
   puts response.original_status
-  puts response.pc_status
+  puts response.cb_status
   puts response.url
   puts response.status_code
   puts response.rid
@@ -271,7 +286,7 @@ or you can use the [RID](https://crawlbase.com/docs/storage-api/parameters/#rid)
 begin
   response = storage_api.get(RID)
   puts response.original_status
-  puts response.pc_status
+  puts response.cb_status
   puts response.url
   puts response.status_code
   puts response.rid
@@ -304,7 +319,7 @@ To do a bulk request with a list of RIDs, please send the list of rids as an arr
 begin
   response = storage_api.bulk([RID1, RID2, RID3, ...])
   puts response.original_status
-  puts response.pc_status
+  puts response.cb_status
   puts response.url
   puts response.status_code
   puts response.rid

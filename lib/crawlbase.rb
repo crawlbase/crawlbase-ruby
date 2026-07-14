@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 require 'crawlbase/version'
+require 'crawlbase/status_resolution'
 require 'crawlbase/api'
 require 'crawlbase/scraper_api'
 require 'crawlbase/leads_api'

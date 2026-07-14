@@ -2,6 +2,10 @@ require 'spec_helper'
 require 'crawlbase'
 
 describe Crawlbase::ScreenshotsAPI do
+  before(:each) do
+    Crawlbase.instance_variable_set(:@pc_status_deprecation_warned, false)
+  end
+
   it 'raises an error if token is missing' do
     expect { Crawlbase::ScreenshotsAPI.new }.to raise_error(RuntimeError, 'Token is required')
   end
@@ -11,7 +15,7 @@ describe Crawlbase::ScreenshotsAPI do
   end
 
   describe '#get' do
-    before(:each) do 
+    before(:each) do
       stub_request(:get, 'https://api.crawlbase.com/screenshots?token=test&url=http%3A%2F%2Fhttpbin.org%2Fanything%3Fparam1%3Dx%26params2%3Dy').
         to_return(
           body: 'body',
@@ -26,6 +30,7 @@ describe Crawlbase::ScreenshotsAPI do
 
       expect(response.status_code).to eql(200)
       expect(response.original_status).to eql(200)
+      expect(response.cb_status).to eql(200)
       expect(response.pc_status).to eql(200)
       expect(response.url).to eql('http://httpbin.org/anything?param1=x&params2=y')
       expect(response.body).to eql('body')
@@ -39,6 +44,7 @@ describe Crawlbase::ScreenshotsAPI do
 
       expect(response.status_code).to eql(200)
       expect(response.original_status).to eql(200)
+      expect(response.cb_status).to eql(200)
       expect(response.pc_status).to eql(200)
       expect(response.url).to eql('http://httpbin.org/anything?param1=x&params2=y')
       expect(response.body).to eql('body')
@@ -56,14 +62,15 @@ describe Crawlbase::ScreenshotsAPI do
 
     it 'accepts a block' do
       api = Crawlbase::ScreenshotsAPI.new(token: 'test')
-  
+
       response = api.get("http://httpbin.org/anything?param1=x&params2=y", save_to_path: save_to_path) do |file|
         expect(file).to be_kind_of(File)
         expect(file.path).to eql(File.join(Dir.tmpdir, 'test-image.jpg'))
       end
-  
+
       expect(response.status_code).to eql(200)
       expect(response.original_status).to eql(200)
+      expect(response.cb_status).to eql(200)
       expect(response.pc_status).to eql(200)
       expect(response.url).to eql('http://httpbin.org/anything?param1=x&params2=y')
       expect(response.body).to eql('body')

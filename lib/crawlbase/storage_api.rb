@@ -6,7 +6,10 @@ require 'uri'
 
 module Crawlbase
   class StorageAPI
-    attr_reader :token, :original_status, :pc_status, :url, :status_code, :rid, :body, :stored_at
+    attr_reader :token, :original_status, :url, :status_code, :rid, :body, :stored_at
+
+    # Crawlbase status from the response (preferred name for former +pc_status+).
+    attr_reader :cb_status
 
     INVALID_TOKEN = 'Token is required'
     INVALID_RID = 'RID is required'
@@ -20,6 +23,12 @@ module Crawlbase
       @token = options[:token]
     end
 
+    # Deprecated: use {#cb_status}. Returns the same resolved Crawlbase status.
+    def pc_status
+      StatusResolution.warn_pc_status_deprecated
+      @pc_status
+    end
+
     def get(url_or_rid, format = 'html')
       raise INVALID_URL_OR_RID if url_or_rid.nil? || url_or_rid.empty?
 
@@ -30,7 +39,8 @@ module Crawlbase
       res = format == 'json' ? JSON.parse(response.body) : response
 
       @original_status = res['original_status'].to_i
-      @pc_status = res['pc_status'].to_i
+      @cb_status = StatusResolution.resolve_cb_status(res)
+      @pc_status = @cb_status
       @url = res['url']
       @rid = res['rid']
       @stored_at = res['stored_at']
@@ -50,7 +60,7 @@ module Crawlbase
       request = Net::HTTP::Delete.new(uri.request_uri)
       response = http.request(request)
 
-      @url, @original_status, @pc_status, @stored_at = nil
+      @url, @original_status, @cb_status, @pc_status, @stored_at = nil
       @status_code = response.code.to_i
       @rid = rid
       @body = JSON.parse(response.body)
@@ -71,7 +81,8 @@ module Crawlbase
       @body = JSON.parse(response.body)
       @original_status = @body.map { |item| item['original_status'].to_i }
       @status_code = response.code.to_i
-      @pc_status = @body.map { |item| item['pc_status'].to_i }
+      @cb_status = @body.map { |item| StatusResolution.resolve_cb_status(item) }
+      @pc_status = @cb_status
       @url = @body.map { |item| item['url'] }
       @rid = @body.map { |item| item['rid'] }
       @stored_at = @body.map { |item| item['stored_at'] }
@@ -86,7 +97,7 @@ module Crawlbase
       uri.query = URI.encode_www_form(query_hash)
 
       response = Net::HTTP.get_response(uri)
-      @url, @original_status, @pc_status, @stored_at = nil
+      @url, @original_status, @cb_status, @pc_status, @stored_at = nil
       @status_code = response.code.to_i
       @body = JSON.parse(response.body)
       @rid = @body
@@ -99,7 +110,7 @@ module Crawlbase
       uri.query = URI.encode_www_form(token: token)
 
       response = Net::HTTP.get_response(uri)
-      @url, @original_status, @pc_status, @stored_at = nil
+      @url, @original_status, @cb_status, @pc_status, @stored_at = nil
       @status_code = response.code.to_i
       @rid = rid
       @body = JSON.parse(response.body)

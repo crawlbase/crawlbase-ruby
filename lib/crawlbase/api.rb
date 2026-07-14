@@ -6,7 +6,11 @@ require 'uri'
 
 module Crawlbase
   class API
-    attr_reader :token, :body, :status_code, :original_status, :pc_status, :url, :storage_url, :timeout
+    # Crawlbase HTTP response code for the API call itself.
+    attr_reader :token, :body, :status_code, :original_status, :url, :storage_url, :timeout
+
+    # Crawlbase status from the response (preferred name for former +pc_status+).
+    attr_reader :cb_status
 
     INVALID_TOKEN = 'Token is required'
     INVALID_URL = 'URL is required'
@@ -17,6 +21,12 @@ module Crawlbase
 
       @token = options[:token]
       @timeout = options.fetch(:timeout, DEFAULT_TIMEOUT)
+    end
+
+    # Deprecated: use {#cb_status}. Returns the same resolved Crawlbase status.
+    def pc_status
+      StatusResolution.warn_pc_status_deprecated
+      @pc_status
     end
 
     def get(url, options = {})
@@ -80,7 +90,8 @@ module Crawlbase
       res = format == 'json' || base_url.include?('/scraper') ? JSON.parse(response.body) : response
 
       @original_status = res['original_status'].to_i
-      @pc_status = res['pc_status'].to_i
+      @cb_status = StatusResolution.resolve_cb_status(res)
+      @pc_status = @cb_status
       @url = res['url']
       @storage_url = res['storage_url']
       @status_code = response.code.to_i

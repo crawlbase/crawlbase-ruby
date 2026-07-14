@@ -2,6 +2,10 @@ require 'spec_helper'
 require 'crawlbase'
 
 describe Crawlbase::StorageAPI do
+  before(:each) do
+    Crawlbase.instance_variable_set(:@pc_status_deprecation_warned, false)
+  end
+
   it 'raises an error if token is missing' do
     expect { Crawlbase::StorageAPI.new }.to raise_error(RuntimeError, 'Token is required')
   end
@@ -40,6 +44,78 @@ describe Crawlbase::StorageAPI do
           body: '<html><head><title>Apple</title></head><body>Apple</body></html>'
         }.to_json
       )
+    end
+
+    it 'resolves cb_status from JSON body with only cb_status' do
+      stub_request(:get, 'https://api.crawlbase.com/storage?format=json&rid=1&token=test')
+        .to_return(
+          status: 200,
+          body: {
+            'stored_at' => '2021-03-01T14:22:58+02:00',
+            'original_status' => 200,
+            'cb_status' => 201,
+            'rid' => '1',
+            'url' => 'https://www.apple.com'
+          }.to_json
+        )
+
+      subject.get('1', 'json')
+      expect(subject.cb_status).to eq(201)
+      expect(subject.pc_status).to eq(201)
+    end
+
+    it 'falls back to pc_status from JSON body when cb_status is absent' do
+      stub_request(:get, 'https://api.crawlbase.com/storage?format=json&rid=1&token=test')
+        .to_return(
+          status: 200,
+          body: {
+            'stored_at' => '2021-03-01T14:22:58+02:00',
+            'original_status' => 200,
+            'pc_status' => 202,
+            'rid' => '1',
+            'url' => 'https://www.apple.com'
+          }.to_json
+        )
+
+      subject.get('1', 'json')
+      expect(subject.cb_status).to eq(202)
+      expect(subject.pc_status).to eq(202)
+    end
+
+    it 'prefers cb_status when both keys are present in JSON body' do
+      stub_request(:get, 'https://api.crawlbase.com/storage?format=json&rid=1&token=test')
+        .to_return(
+          status: 200,
+          body: {
+            'stored_at' => '2021-03-01T14:22:58+02:00',
+            'original_status' => 200,
+            'cb_status' => 203,
+            'pc_status' => 500,
+            'rid' => '1',
+            'url' => 'https://www.apple.com'
+          }.to_json
+        )
+
+      subject.get('1', 'json')
+      expect(subject.cb_status).to eq(203)
+      expect(subject.pc_status).to eq(203)
+    end
+
+    it 'returns 0 when neither cb_status nor pc_status is present' do
+      stub_request(:get, 'https://api.crawlbase.com/storage?format=json&rid=1&token=test')
+        .to_return(
+          status: 200,
+          body: {
+            'stored_at' => '2021-03-01T14:22:58+02:00',
+            'original_status' => 200,
+            'rid' => '1',
+            'url' => 'https://www.apple.com'
+          }.to_json
+        )
+
+      subject.get('1', 'json')
+      expect(subject.cb_status).to eq(0)
+      expect(subject.pc_status).to eq(0)
     end
   end
 
@@ -139,6 +215,44 @@ describe Crawlbase::StorageAPI do
           'https://www.espn.com'
         ]
       )
+      expect(subject.cb_status).to eq([200, 200, 200])
+      expect(subject.pc_status).to eq([200, 200, 200])
+    end
+
+    it 'resolves per-item cb_status with preference over pc_status' do
+      stub_request(:post, 'http://api.crawlbase.com/storage/bulk?token=test')
+        .with(body: { rids: %w[1 2 3] }.to_json)
+        .to_return(
+          status: 200,
+          body: [
+            {
+              'stored_at' => '2021-03-01T14:22:58+02:00',
+              'original_status' => 200,
+              'cb_status' => 201,
+              'rid' => '1',
+              'url' => 'https://www.apple.com'
+            },
+            {
+              'stored_at' => '2021-03-02T14:22:58+02:00',
+              'original_status' => 200,
+              'pc_status' => 202,
+              'rid' => '2',
+              'url' => 'https://www.google.com'
+            },
+            {
+              'stored_at' => '2021-03-03T14:22:58+02:00',
+              'original_status' => 200,
+              'cb_status' => 203,
+              'pc_status' => 500,
+              'rid' => '3',
+              'url' => 'https://www.espn.com'
+            }
+          ].to_json
+        )
+
+      subject.bulk(%w[1 2 3])
+      expect(subject.cb_status).to eq([201, 202, 203])
+      expect(subject.pc_status).to eq([201, 202, 203])
     end
   end
 
