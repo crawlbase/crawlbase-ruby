@@ -153,6 +153,8 @@ The library reads `cb_status` from the API response first, then falls back to `p
 
 ## Scraper API usage
 
+> ⚠️ **Deprecated.** The standalone Scraper API has been closed to new sign-ups since October 1, 2024. Existing integrations continue to work and no shutdown is scheduled, but new code should use the Crawling API with the `scraper` parameter instead (same scrapers, simpler endpoint, more parameters). The class below stays available for backward compatibility. See the [scrapers documentation](https://crawlbase.com/docs/scrapers).
+
 Initialize the Scraper API using your normal token and call the `get` method.
 
 ```ruby
@@ -180,6 +182,8 @@ end
 
 ## Leads API usage
 
+> ⚠️ **Deprecated.** The Leads API has been closed to new sign-ups since October 1, 2024. Existing integrations continue to work and no shutdown is scheduled. There is no direct replacement; for similar workflows use the Crawling API with the [`email-extractor`](https://crawlbase.com/docs/scrapers/email-extractor) scraper (any URL → emails) or the [`google-serp`](https://crawlbase.com/docs/scrapers/google-serp) scraper for domain-scoped contact discovery. The class below stays available for backward compatibility.
+
 Initialize with your Leads API token and call the `get` method.
 
 For more details on the implementation, please visit the [Leads API documentation](https://crawlbase.com/docs/leads-api).
@@ -202,6 +206,8 @@ If you have questions or need help using the library, please open an issue or [c
 
 
 ## Screenshots API usage
+
+> ⚠️ **Deprecated.** The standalone Screenshots API has been closed to new sign-ups since November 1, 2024. Existing integrations continue to work and no shutdown is scheduled, but new code should use the Crawling API with the `screenshot=true` parameter — same JS-rendering pipeline, screenshot parameters on the standard endpoint. The class below stays available for backward compatibility. See the [Crawling API screenshots section](https://crawlbase.com/docs/crawling-api#screenshots).
 
 Initialize with your Screenshots API token and call the `get` method.
 
@@ -254,6 +260,23 @@ end
 ```
 
 Note that `screenshots_api.get(url, options)` method accepts an [options](https://crawlbase.com/docs/screenshots-api/parameters)
+
+## Smart AI Proxy usage
+
+The [Smart AI Proxy](https://crawlbase.com/docs/smart-proxy) is a standard rotating HTTP(S) proxy endpoint, so it needs no SDK: point any HTTP client at `smartproxy.crawlbase.com:8012` (HTTP) or `smartproxy.crawlbase.com:8013` (HTTPS) with your token as the proxy username and an empty password. Crawlbase handles proxy rotation, retries and anti-bot bypass on its side.
+
+```ruby
+require 'net/http'
+
+uri = URI('https://httpbin.org/ip')
+proxy = Net::HTTP::Proxy('smartproxy.crawlbase.com', 8013, 'YOUR_TOKEN', '')
+http = proxy.new(uri.host, uri.port)
+http.use_ssl = true
+http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+puts http.get(uri.request_uri).body
+```
+
+Note: the proxy re-signs HTTPS traffic, so certificate verification must be disabled on the client (as in the example). See the [Smart AI Proxy documentation](https://crawlbase.com/docs/smart-proxy) for all options.
 
 ## Storage API usage
 
