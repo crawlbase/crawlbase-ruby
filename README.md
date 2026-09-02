@@ -207,7 +207,7 @@ If you have questions or need help using the library, please open an issue or [c
 
 ## Screenshots API usage
 
-> ⚠️ **Deprecated.** The standalone Screenshots API has been closed to new sign-ups since November 1, 2024. Existing integrations continue to work and no shutdown is scheduled, but new code should use the Crawling API with the `screenshot=true` parameter — same JS-rendering pipeline, screenshot parameters on the standard endpoint. The class below stays available for backward compatibility. See the [Crawling API screenshots section](https://crawlbase.com/docs/crawling-api#screenshots).
+> ⚠️ **Deprecated.** The standalone Screenshots API has been closed to new sign-ups since November 1, 2024. Existing integrations continue to work and no shutdown is scheduled, but new code should use the Crawling API with the `screenshot=true` parameter — same JS-rendering pipeline, screenshot parameters on the standard endpoint. The class below stays available for backward compatibility. See the [Crawling API documentation](https://crawlbase.com/docs/crawling-api).
 
 Initialize with your Screenshots API token and call the `get` method.
 
@@ -269,14 +269,14 @@ The [Smart AI Proxy](https://crawlbase.com/docs/smart-proxy) is a standard rotat
 require 'net/http'
 
 uri = URI('https://httpbin.org/ip')
-proxy = Net::HTTP::Proxy('smartproxy.crawlbase.com', 8013, 'YOUR_TOKEN', '')
+proxy = Net::HTTP::Proxy('smartproxy.crawlbase.com', 8012, 'YOUR_TOKEN', '')
 http = proxy.new(uri.host, uri.port)
 http.use_ssl = true
 http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 puts http.get(uri.request_uri).body
 ```
 
-Note: the proxy re-signs HTTPS traffic, so certificate verification must be disabled on the client (as in the example). See the [Smart AI Proxy documentation](https://crawlbase.com/docs/smart-proxy) for all options.
+Note: the proxy re-signs HTTPS traffic, so certificate verification must be disabled on the client (as in the example). The example uses the plain-HTTP proxy port `8012` because stdlib `Net::HTTP` cannot open a TLS connection to the proxy itself; the request to the target still goes through the encrypted tunnel. See the [Smart AI Proxy documentation](https://crawlbase.com/docs/smart-proxy) for all options.
 
 ## Storage API usage
 
